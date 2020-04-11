@@ -5,8 +5,8 @@
   const WebSocket = require('ws');
   const wav = require('wav');
   const wss = new WebSocket.Server({ port: 80 });
-  var subscriptionKey = "6e83631f53fb4a07b0cde7cf8fab0b26";
-  var serviceRegion = "westus"; // e.g., "westus"
+  var subscriptionKey = process.env['SUBSCRIPTION_KEY'] || "6e83631f53fb4a07b0cde7cf8fab0b26";
+  var serviceRegion = process.env['SERVICE_REGION'] || "westus"; // e.g., "westus"
   var filename = "YourAudioFile.wav"; // 16000 Hz, Mono
 //  var pushStream = sdk.AudioInputStream.createPushStream();
 //  console.log(pushStream.write.toString());
