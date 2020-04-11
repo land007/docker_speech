@@ -3,8 +3,14 @@
   const sdk = require("microsoft-cognitiveservices-speech-sdk");
   const fs = require("fs");
   const WebSocket = require('ws');
+  const http = require('http');
+  const url = require("url");
+  const path = require("path");
+  const normalize = path.normalize;
+  const join = path.join
+  const sep = path.sep;
+  //const https = require('https');
   const wav = require('wav');
-  const wss = new WebSocket.Server({ port: 80 });
   var subscriptionKey = process.env['SUBSCRIPTION_KEY'] || "6e83631f53fb4a07b0cde7cf8fab0b26";
   var serviceRegion = process.env['SERVICE_REGION'] || "westus"; // e.g., "westus"
   var filename = "YourAudioFile.wav"; // 16000 Hz, Mono
@@ -15,6 +21,117 @@
 //  }).on('end', function() {
 ////    pushStream.close();
 //  });
+  var root = __dirname + sep + 'static';
+  var http_server = function(req, res) {
+	//  var pathname = __dirname + url.parse(req.url).pathname;
+		var pathname = url.parse(req.url).pathname;
+		if(pathname == '/test.json') {
+			var obj = {code: 200, msg: 'ok'};
+			res.writeHead(200, {
+				"Content-Type" : "text/javascript",
+				"Cache-Control" : "no-store, no-cache, must-revalidate",
+				"Pragma" : "no-cache",
+				"Access-Control-Allow-Origin" : "*",
+				"Access-Control-Allow-Headers" : "Content-Type,Content-Length, Authorization, Accept,X-Requested-With",
+				"Access-Control-Allow-Methods" : "PUT,POST,GET,DELETE,OPTIONS",
+			});
+			res.end(JSON.stringify(obj));
+			return;
+		}
+		var pathfile = normalize(join(root, pathname));
+	    root = normalize(root + sep);
+	    // malicious path
+	    if ((pathfile + sep).substr(0, root.length) !== root) {
+	    	console.error('malicious path "' + pathfile + '"');
+	    	res.writeHead(403);
+	    	res.end('malicious path "' + pathfile + '"\n');
+	    	return;
+	    }
+		if (path.extname(pathfile) == "") {
+			if(pathfile.endsWith('\\')) {
+				pathfile += "index.html";
+			}
+		}
+//		path.exists(pathfile, function(exists) {
+//			if (exists) {
+		fs.stat(pathfile, function(stat_error, stat) {
+			if (!stat_error && stat.isFile()) {
+				switch (path.extname(pathfile)) {
+				case ".html":
+					res.writeHead(200, {
+						"Content-Type" : "text/html",
+						"Cache-Control" : "no-store, no-cache, must-revalidate",
+						"Pragma" : "no-cache"
+					});
+					break;
+				case ".js":
+					res.writeHead(200, {
+						"Content-Type" : "text/javascript",
+						"Cache-Control" : "no-store, no-cache, must-revalidate",
+						"Pragma" : "no-cache"
+					});
+					break;
+				case ".json":
+					res.writeHead(200, {
+						"Content-Type" : "application/json",
+						"Cache-Control" : "no-store, no-cache, must-revalidate",
+						"Pragma" : "no-cache",
+						"Access-Control-Allow-Origin" : "*",
+						"Access-Control-Allow-Headers" : "Content-Type,Content-Length, Authorization, Accept,X-Requested-With",
+						"Access-Control-Allow-Methods" : "PUT,POST,GET,DELETE,OPTIONS",
+					});
+					break;
+				case ".css":
+					res.writeHead(200, {
+						"Content-Type" : "text/css",
+						"Cache-Control" : "no-store, no-cache, must-revalidate",
+						"Pragma" : "no-cache"
+					});
+					break;
+				case ".gif":
+					res.writeHead(200, {
+						"Content-Type" : "image/gif",
+						"Cache-Control" : "no-store, no-cache, must-revalidate",
+						"Pragma" : "no-cache"
+					});
+					break;
+				case ".jpg":
+					res.writeHead(200, {
+						"Content-Type" : "image/jpeg",
+						"Cache-Control" : "no-store, no-cache, must-revalidate",
+						"Pragma" : "no-cache"
+					});
+					break;
+				case ".png":
+					res.writeHead(200, {
+						"Content-Type" : "image/png",
+						"Cache-Control" : "no-store, no-cache, must-revalidate",
+						"Pragma" : "no-cache"
+					});
+					break;
+				default:
+					res.writeHead(200, {
+						"Content-Type" : "application/octet-stream",
+						"Cache-Control" : "no-store, no-cache, must-revalidate",
+						"Pragma" : "no-cache"
+					});
+				}
+				fs.readFile(pathfile, function(err, data) {
+					res.end(data);
+				});
+			} else {
+				res.writeHead(404, {
+					"Content-Type" : "text/html",
+					"Cache-Control" : "no-store, no-cache, must-revalidate",
+					"Pragma" : "no-cache"
+				});
+				res.end("<h1>404 Not Found</h1>");
+			}
+		});
+	};
+  const server = http.createServer(http_server);
+//  const wss = new WebSocket.Server({ port: 80 });
+  const wss = new WebSocket.Server({ server });
   var toBuffer = function (ab) {
 	    var buf = new Buffer(ab.byteLength);
 	    var view = new Uint8Array(ab);
@@ -179,5 +296,7 @@ Content-Type:application/json; charset=utf-8\r\n\
       });
     ws.on('error', () => console.log('error'));
   });
+  server.listen(80);
+  console.log('server started. static dir is ' + root + '. open the url http://127.0.0.1');
 }());
   

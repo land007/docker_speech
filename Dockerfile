@@ -4,8 +4,9 @@ MAINTAINER Yiqiu Jia <yiqiujia@hotmail.com>
 
 RUN rm /node_/node_modules
 ADD node/package.json /node_/package.json
-RUN cd /node_ && npm install
+RUN cd /node_ && npm install && mkdir static
 ADD node/websocket.js /node_/server.js
+ADD node/static /node_/static
 #ADD node/start.sh /start.sh
 #RUN chmod +x /start.sh
 
