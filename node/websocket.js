@@ -3,16 +3,17 @@
   const sdk = require("microsoft-cognitiveservices-speech-sdk");
   const fs = require("fs");
   const WebSocket = require('ws');
-  const http = require('http');
+  //const http = require('http');
+  const https = require('https');
   const url = require("url");
   const path = require("path");
   const normalize = path.normalize;
   const join = path.join
   const sep = path.sep;
-  //const https = require('https');
   const wav = require('wav');
   var subscriptionKey = process.env['SUBSCRIPTION_KEY'] || "6e83631f53fb4a07b0cde7cf8fab0b26";
   var serviceRegion = process.env['SERVICE_REGION'] || "westus"; // e.g., "westus"
+  var domainName = process.env['DOMAIN_NAME'] || "voice.qhkly.com"; // e.g., "westus"
   var filename = "YourAudioFile.wav"; // 16000 Hz, Mono
 //  var pushStream = sdk.AudioInputStream.createPushStream();
 //  console.log(pushStream.write.toString());
@@ -21,6 +22,10 @@
 //  }).on('end', function() {
 ////    pushStream.close();
 //  });
+  const options = {
+		  key: fs.readFileSync(__dirname + sep + 'cert' + sep + domainName + '_key.key'),
+		  cert: fs.readFileSync(__dirname + sep + 'cert' + sep + domainName + '_chain.crt')
+		};
   var root = __dirname + sep + 'static';
   var http_server = function(req, res) {
 	//  var pathname = __dirname + url.parse(req.url).pathname;
@@ -52,6 +57,7 @@
 				pathfile += "index.html";
 			}
 		}
+		console.log('pathfile =', pathfile);
 //		path.exists(pathfile, function(exists) {
 //			if (exists) {
 		fs.stat(pathfile, function(stat_error, stat) {
@@ -116,8 +122,8 @@
 						"Pragma" : "no-cache"
 					});
 				}
-				fs.readFile(pathfile, function(err, data) {
-					res.end(data);
+				fs.readFile(pathfile, function(err, data1) {
+					res.end(data1);
 				});
 			} else {
 				res.writeHead(404, {
@@ -129,7 +135,7 @@
 			}
 		});
 	};
-  const server = http.createServer(http_server);
+  const server = https.createServer(options, http_server);
 //  const wss = new WebSocket.Server({ port: 80 });
   const wss = new WebSocket.Server({ server });
   var toBuffer = function (ab) {
@@ -239,7 +245,7 @@ Content-Type:application/json; charset=utf-8\r\n\
           message = jq(message);//替代品 https://recordrtc.org/
           message = jq(message);//方法 https://stackoverflow.com/questions/34319617/recording-binary-stream-to-wav-file-over-websocket-with-ssl
           message = jq(message);
-//          data = Buffer.concat([data, message], data.length + message.length);
+          data = Buffer.concat([data, message], data.length + message.length);
           if(pushStream) {
               pushStream.write(message);
           }
@@ -287,16 +293,16 @@ Content-Type:application/json; charset=utf-8\r\n\
     ws.on('close', function() {
     	pushStream.close();
     	pushStream = undefined;
-    	recognizer.close();
+    	//recognizer.close();
         recognizer = undefined;
 //        ws.close();
         ws = undefined;
-//        fileWriter.write(data);
-//        fileWriter.end();
+        fileWriter.write(data);
+        fileWriter.end();
       });
     ws.on('error', () => console.log('error'));
   });
-  server.listen(80);
-  console.log('server started. static dir is ' + root + '. open the url http://127.0.0.1');
+  server.listen(443);
+  console.log('server started. static dir is ' + root + ' open the url https://' + domainName);
 }());
   
