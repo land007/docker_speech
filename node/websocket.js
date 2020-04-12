@@ -245,7 +245,7 @@ Content-Type:application/json; charset=utf-8\r\n\
           message = jq(message);//替代品 https://recordrtc.org/
           message = jq(message);//方法 https://stackoverflow.com/questions/34319617/recording-binary-stream-to-wav-file-over-websocket-with-ssl
           message = jq(message);
-          data = Buffer.concat([data, message], data.length + message.length);
+//          data = Buffer.concat([data, message], data.length + message.length);
           if(pushStream) {
               pushStream.write(message);
           }
@@ -293,12 +293,12 @@ Content-Type:application/json; charset=utf-8\r\n\
     ws.on('close', function() {
     	pushStream.close();
     	pushStream = undefined;
-    	//recognizer.close();
+    	recognizer.close();
         recognizer = undefined;
 //        ws.close();
         ws = undefined;
-        fileWriter.write(data);
-        fileWriter.end();
+//        fileWriter.write(data);
+//        fileWriter.end();
       });
     ws.on('error', () => console.log('error'));
   });
