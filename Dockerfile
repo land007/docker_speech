@@ -5,7 +5,7 @@ MAINTAINER Yiqiu Jia <yiqiujia@hotmail.com>
 RUN rm /node_/node_modules
 ADD node/package.json /node_/package.json
 RUN cd /node_ && npm install && mkdir static
-ADD node/websocket.js /node_/server.js
+ADD node/server.js /node_/server.js
 ADD node/static /node_/static
 #ADD node/start.sh /start.sh
 #RUN chmod +x /start.sh
@@ -19,10 +19,10 @@ ENV SERVICE_REGION=westus\
 	DOMAIN_NAME=voice.qhkly.com
 
 #RUN echo "/check.sh /node" >> /start.sh
-#date Ðè´¦Àí
-#¼ÓÒ»¸ö×ÔÔöÐòºÅ
-#ÈÕÖ¾Ðè´¦Àí
-#ÈÎÎñÐè´¦Àí
+#date éœ€å¤„ç†
+#åŠ ä¸€ä¸ªè‡ªå¢žåºå·
+#æ—¥å¿—éœ€å¤„ç†
+#ä»»åŠ¡éœ€å¤„ç†
 
 #> docker buildx build --platform linux/amd64,linux/arm64,linux/arm/v7 -t land007/speech --push .
 #docker build -t land007/speech:latest .

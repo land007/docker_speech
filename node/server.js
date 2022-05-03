@@ -11,6 +11,7 @@
   const join = path.join
   const sep = path.sep;
   const wav = require('wav');
+  const querystring = require("querystring");
   var subscriptionKey = process.env['SUBSCRIPTION_KEY'] || "6e83631f53fb4a07b0cde7cf8fab0b26";
   var serviceRegion = process.env['SERVICE_REGION'] || "westus"; // e.g., "westus"
   var domainName = process.env['DOMAIN_NAME'] || "voice.qhkly.com"; // e.g., "westus"
@@ -158,14 +159,16 @@
 	    bitDepth: 16
 	  });
   var send_startmsg = true;
-  wss.on('connection', function connection(ws) {
+  wss.on('connection', function connection(ws, req) {
+      var args = querystring.parse(url.parse(req.url).query);
+      console.log('args', args);
 	  let requestid = '';
 	  console.log("Now recognizing from: " + filename);
 	  let pushStream = sdk.AudioInputStream.createPushStream();
 	  let audioConfig = sdk.AudioConfig.fromStreamInput(pushStream);
 	//  console.log(audioConfig);
 	  let speechConfig = sdk.SpeechConfig.fromSubscription(subscriptionKey, serviceRegion);
-	  speechConfig.speechRecognitionLanguage = "zh-CN";
+	  speechConfig.speechRecognitionLanguage = args.language;//"zh-CN";
 	//  console.log(speechConfig);
 	  let recognizer = new sdk.SpeechRecognizer(speechConfig, audioConfig);
 	  recognizer.recognized = (r, event) => {
@@ -249,7 +252,7 @@ Content-Type:application/json; charset=utf-8\r\n\
           if(pushStream) {
               pushStream.write(message);
           }
-          
+
           //test
 //          let header = 'cpath: audio\r\n\
 //x-requestid: ' + requestid + '\r\n\
@@ -305,4 +308,3 @@ Content-Type:application/json; charset=utf-8\r\n\
   server.listen(443);
   console.log('server started. static dir is ' + root + ' open the url https://' + domainName);
 }());
-  
