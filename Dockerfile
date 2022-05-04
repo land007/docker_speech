@@ -2,9 +2,10 @@ FROM land007/ubuntu-node-min:latest
 
 MAINTAINER Yiqiu Jia <yiqiujia@hotmail.com>
 
-RUN rm /node_/node_modules
-ADD node/package.json /node_/package.json
-RUN cd /node_ && npm install && mkdir static
+#RUN rm /node_/node_modules
+#ADD node/package.json /node_/package.json
+#RUN cd / && npm install && mkdir static
+RUN . $HOME/.nvm/nvm.sh && cd / && npm install microsoft-cognitiveservices-speech-sdk wav
 ADD node/server.js /node_/server.js
 ADD node/static /node_/static
 #ADD node/start.sh /start.sh
