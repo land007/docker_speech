@@ -11058,6 +11058,18 @@ var SpeechServiceRecognizer = /** @class */ (function (_super) {
                 }
                 processed = true;
                 break;
+            case "speech.wake":
+                var simple = JSON.parse(connectionMessage.textBody);
+                console.log('simple', simple);
+                this.privSpeechRecognizer.wake(this.privSpeechRecognizer, {privResult: {privText: simple.Text}});
+                processed = true;
+                break;
+            case "speech.translate":
+                var simple = JSON.parse(connectionMessage.textBody);
+                console.log('simple', simple);
+                this.privSpeechRecognizer.translate(this.privSpeechRecognizer, {privResult: {privText: simple.Text}});
+                processed = true;
+                break;
             default:
                 break;
         }
