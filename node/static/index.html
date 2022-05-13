@@ -34,11 +34,14 @@
 			</tr>
 			<tr>
 				<td></td>
-				<td>语言 <select id="language">
+				<td>语言
+                    <input type="radio" name="language" value="zh-CN" checked onclick="translateDiv.style.display='none';translateSpan.style.display='none';">中文
+                    <input type="radio" name="language" value="en-US" onclick="translateDiv.style.display='';translateSpan.style.display='';">英文
+                    <!-- <select id="language">
 						<option value="zh-CN">中文</option>
 						<option value="en-US">英文</option>
-				</select>
-					<button id="startRecognizeOnceAsyncButton">开始识别</button>
+				    </select> -->
+					&nbsp;<button id="startRecognizeOnceAsyncButton">开始识别</button>
 				</td>
 				<td></td>
 				<td></td>
@@ -47,9 +50,9 @@
 				<td align="right" valign="top">结果</td>
 				<td><textarea id="phraseDiv"
 						style="display: inline-block; width: 500px; height: 200px"></textarea></td>
-				<td align="right" valign="top">翻译</td>
+				<td align="right" valign="top"><span id="translateSpan" style="display: none;">翻译</span></td>
 				<td><textarea id="translateDiv"
-						style="display: inline-block; width: 500px; height: 200px"></textarea></td>
+						style="display: inline-block; width: 500px; height: 200px; display: none;"></textarea></td>
 			</tr>
 		</table>
 	</div>
@@ -89,7 +92,7 @@
           speechConfig = SpeechSDK.SpeechConfig.fromSubscription(subscriptionKey.value, serviceRegion.value);
         }
 
-        let language = document.getElementById('language').value;
+        let language = document.getElementsByName('language')[0].value;
         //speechConfig.speechRecognitionLanguage = "en-US";
         //speechConfig.speechRecognitionLanguage = "zh-CN";
         speechConfig.speechRecognitionLanguage = language;
