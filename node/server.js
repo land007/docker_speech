@@ -43,6 +43,7 @@
     var http_server = function(req, res) {
         //  var pathname = __dirname + url.parse(req.url).pathname;
         var pathname = url.parse(req.url).pathname;
+        console.log('pathname', pathname);
         if (pathname == '/test.json') {
             var obj = { code: 200, msg: 'ok' };
             res.writeHead(200, {
@@ -55,6 +56,30 @@
             });
             res.end(JSON.stringify(obj));
             return;
+        } else if (pathname == "/translate") {
+            var parseObj = url.parse(req.url, true);
+            console.log('parseObj', parseObj.query);
+            let content = parseObj.query.content || 'Hello';
+            let from = parseObj.query.from || 'en';
+            let to = parseObj.query.to || 'zh-CN';
+            let uri = 'https://b5j3knheg0.execute-api.ap-southeast-1.amazonaws.com/default/Translate?content=' + encodeURIComponent(content) + '&from=' + from + '&to=' + to;
+            console.log('start translate ' + uri);
+            let translate_options = {
+                method: 'get',
+                //jar: true,
+                uri
+            };
+            request(translate_options, function(error, response, body) {
+                if (error)
+                    console.log(error);
+                res.writeHead(200, {
+                    "Content-Type": "text/html; charset=utf-8",
+                    "Cache-Control": "no-store, no-cache, must-revalidate",
+                    "Pragma": "no-cache"
+                });
+                res.end(body);
+            });
+            return;
         }
         var pathfile = normalize(join(root, pathname));
         root = normalize(root + sep);
@@ -65,6 +90,7 @@
             res.end('malicious path "' + pathfile + '"\n');
             return;
         }
+        console.log('pathfile', pathfile);
         if (path.extname(pathfile) == "") {
             if (pathfile.endsWith('\\')) {
                 pathfile += "index.html";

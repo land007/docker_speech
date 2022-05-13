@@ -1,0 +1,343 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>认知语音服务</title>
+<!--   <title>Microsoft Cognitive Services Speech SDK JavaScript Quickstart</title> -->
+<meta charset="utf-8" />
+</head>
+<body
+	style="font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; font-size: 13px;">
+	<!-- <uidiv> -->
+	<div id="warning">
+		<h1 style="font-weight: 500;">Speech Recognition Speech SDK not
+			found (microsoft.cognitiveservices.speech.sdk.bundle.js missing).</h1>
+	</div>
+
+	<div id="content" style="display: none">
+		<table width="100%">
+			<tr style="display: none">
+				<td></td>
+				<td><h1 style="font-weight: 500;">Microsoft Cognitive
+						Services Speech SDK JavaScript Quickstart</h1></td>
+			</tr>
+			<tr style="display: none">
+				<td align="right"><a
+					href="https://docs.microsoft.com/azure/cognitive-services/speech-service/get-started"
+					target="_blank">Subscription</a>:</td>
+				<td><input id="subscriptionKey" type="text" size="40"
+					value="6e83631f53fb4a07b0cde7cf8fab0b26"></td>
+			</tr>
+			<tr style="display: none">
+				<td align="right">Region</td>
+				<td><input id="serviceRegion" type="text" size="40"
+					value="westus"></td>
+			</tr>
+			<tr>
+				<td></td>
+				<td>语言 <select id="language">
+						<option value="en-US">英文</option>
+				</select>
+					<button id="startRecognizeOnceAsyncButton">开始识别</button>
+				</td>
+				<td></td>
+				<td></td>
+			</tr>
+			<tr>
+				<td align="right" valign="top">结果</td>
+				<td><textarea id="phraseDiv"
+						style="display: inline-block; width: 500px; height: 200px"></textarea></td>
+				<td align="right" valign="top">翻译</td>
+				<td><textarea id="translateDiv"
+						style="display: inline-block; width: 500px; height: 200px"></textarea></td>
+			</tr>
+			<tr>
+				<td></td>
+				<td></td>
+				<td></td>
+				<td>
+                    <input type="button" value="播放" onclick="start();">
+                    <input type="button" value="暂停" onclick="stop();">
+                </td>
+			</tr>
+			<tr>
+				<td align="right" valign="top">文案</td>
+				<td><textarea id="docDiv"
+						style="display: inline-block; width: 500px; height: 200px" oninput="docDivOninput(this);"></textarea></td>
+				<td align="right" valign="top">英语</td>
+				<td><textarea id="docTranslateDiv"
+						style="display: inline-block; width: 500px; height: 200px"></textarea></td>
+			</tr>
+		</table>
+	</div>
+	<!-- </uidiv> -->
+
+    <div>
+        <input type="radio" value="en-US-AriaNeural" name="type" checked>AriaNeural
+        <input type="radio" value="en-US-GuyNeural" name="type">GuyNeural
+        <input type="radio" value="en-US-JennyNeural" name="type">JennyNeural
+        <input type="radio" value="en-US-SaraNeural" name="type">SaraNeural
+    </div>
+    <div>
+        角色扮演
+        <select id="role" >
+            <option value="Default">默认</option>
+            <option value ="YoungAdultMale">男青年</option>
+            <option value ="YoungAdultFemale">女青年</option>
+            <option value ="OlderAdultMale">男中年</option>
+            <option value ="OlderAdultFemale">女中年</option>
+            <option value ="SeniorMale">男老年</option>
+            <option value ="SeniorFemale">女老年</option>
+            <option value ="Boy">男孩</option>
+            <option value ="Girl">女孩</option>
+        </select>
+        说话风格
+        <select id="style" >
+            <option value="Default">默认</option>
+            <option value="volvo">平静</option>
+            <option value="cheerful">开心</option>
+            <option value="sad">悲伤</option>
+            <option value="angry">愤怒</option>
+            <option value="fearful">恐惧</option>
+            <option value="disgruntled">不满</option>
+            <option value="serious">严厉</option>
+            <option value="disgruntled">不满</option>
+            <option value="affectionate">撒娇</option>
+            <option value="gentle">温柔</option>
+            <option value="depressed">沮丧</option>
+            <option value="embarrassed">尴尬</option>
+            <option value="serious">严肃</option>
+            <option value="affectionate">温柔</option>
+        </select>
+    </div>
+    <div>
+        语言
+        <input id="lang" type="text" value="en-US">
+        语速
+        <input id="rate" type="text" value="0">
+        音高
+        <input id="pitch" type="text" value="0">
+        音量
+        <input id="volume" type="text" value="0">
+        音调
+        <input id="contour" type="text" value="">
+    </div>
+
+	<!-- <speechsdkref> -->
+	<!-- Speech SDK reference sdk. -->
+	<script src="microsoft.cognitiveservices.speech.sdk.bundle.js"></script>
+	<script src="jquery-3.6.0.min.js"></script>
+	<!-- </speechsdkref> -->
+
+	<!-- <quickstartcode> -->
+	<!-- Speech SDK USAGE -->
+	<script>
+    // status fields and start button in UI
+    var phraseDiv;
+    var translateDiv;
+    var docTranslateDiv;
+    var startRecognizeOnceAsyncButton;
+
+    // subscription key and region for speech services.
+    var subscriptionKey, serviceRegion;
+    var authorizationToken;
+    var SpeechSDK;
+    var recognizer;
+    var jianting = function() {
+        startRecognizeOnceAsyncButton.disabled = true;
+        phraseDiv.innerHTML = "";
+
+        // if we got an authorization token, use the token. Otherwise use the provided subscription key
+        var speechConfig;
+        if (authorizationToken) {
+          speechConfig = SpeechSDK.SpeechConfig.fromAuthorizationToken(authorizationToken, serviceRegion.value);
+        } else {
+          if (subscriptionKey.value === "" || subscriptionKey.value === "subscription") {
+            alert("Please enter your Microsoft Cognitive Services Speech subscription key!");
+            return;
+          }
+          speechConfig = SpeechSDK.SpeechConfig.fromSubscription(subscriptionKey.value, serviceRegion.value);
+        }
+
+        let language = document.getElementById('language').value;
+        //speechConfig.speechRecognitionLanguage = "en-US";
+        //speechConfig.speechRecognitionLanguage = "zh-CN";
+        speechConfig.speechRecognitionLanguage = language;
+//         Exports_3.PropertyId.SpeechServiceConnection_Host, "ws://127.0.0.1"
+        console.log(speechConfig);
+        var audioConfig  = SpeechSDK.AudioConfig.fromDefaultMicrophoneInput();
+        console.log(audioConfig);
+        recognizer = new SpeechSDK.SpeechRecognizer(speechConfig, audioConfig);
+
+		recognizer.recognized = (r, event) => {
+		  console.log(event);
+		  if(event.privResult.privText) {
+			phraseDiv.innerHTML += event.privResult.privText;
+            if(phraseDiv.scrollHeight - phraseDiv.offsetHeight - phraseDiv.scrollTop < 20) {
+                phraseDiv.scrollTop = phraseDiv.scrollHeight - phraseDiv.offsetHeight;
+            }
+		  }
+		};
+
+		var pingTimeout;
+		recognizer.wake = (r, event) => {
+		  if(event.privResult.privText) {
+		   if(event.privResult.privText == 'ping') {
+	            startRecognizeOnceAsyncButton.style.color='green';
+	            if(pingTimeout) {
+	                clearTimeout(pingTimeout);
+	            }
+	            pingTimeout = setTimeout(function() {
+	                startRecognizeOnceAsyncButton.style.color='black';
+	                pingTimeout = undefined;
+	            }, 500);
+	            return;
+	        }
+			phraseDiv.innerHTML += event.privResult.privText;
+		  }
+		};
+
+		recognizer.translate = (r, event) => {
+		  if(event.privResult.privText) {
+			translateDiv.innerHTML += event.privResult.privText;
+            if(translateDiv.scrollHeight - translateDiv.offsetHeight - translateDiv.scrollTop < 20) {
+                translateDiv.scrollTop = translateDiv.scrollHeight - translateDiv.offsetHeight;
+            }
+		  }
+		};
+
+		recognizer.startContinuousRecognitionAsync(
+          function () {
+            },
+          function (err) {
+            startRecognizeOnceAsyncButton.disabled = false;
+            //phraseDiv.innerHTML += err;
+            window.console.log(err);
+            //recognizer.stopContinuousRecognitionAsync();
+            recognizer.close();
+            recognizer = undefined;
+            setTimeout(jianting, 1000);
+          });
+		return;
+        recognizer.recognizeOnceAsync(
+          function (result) {
+            startRecognizeOnceAsyncButton.disabled = false;
+            phraseDiv.innerHTML += result.text;
+            window.console.log(result);
+
+            recognizer.close();
+            recognizer = undefined;
+          },
+          function (err) {
+            startRecognizeOnceAsyncButton.disabled = false;
+            phraseDiv.innerHTML += err;
+            window.console.log(err);
+
+            recognizer.close();
+            recognizer = undefined;
+          });
+    };
+
+    document.addEventListener("DOMContentLoaded", function () {
+      startRecognizeOnceAsyncButton = document.getElementById("startRecognizeOnceAsyncButton");
+      subscriptionKey = document.getElementById("subscriptionKey");
+      serviceRegion = document.getElementById("serviceRegion");
+      phraseDiv = document.getElementById("phraseDiv");
+      translateDiv = document.getElementById("translateDiv");
+      docTranslateDiv = document.getElementById("docTranslateDiv");
+
+      startRecognizeOnceAsyncButton.addEventListener("click", jianting);
+      if (!!window.SpeechSDK) {
+        SpeechSDK = window.SpeechSDK;
+        startRecognizeOnceAsyncButton.disabled = false;
+
+        document.getElementById('content').style.display = 'block';
+        document.getElementById('warning').style.display = 'none';
+
+        // in case we have a function for getting an authorization token, call it.
+        if (typeof RequestAuthorizationToken === "function") {
+            RequestAuthorizationToken();
+        }
+      }
+    });
+
+    var getKey = function(){
+        let text = document.getElementById('docTranslateDiv').value;
+        let role = document.getElementById('role').value;
+        let style = document.getElementById('style').value;
+        let rate = document.getElementById('rate').value;
+        let pitch = document.getElementById('pitch').value;
+        let volume = document.getElementById('volume').value;
+        let contour = document.getElementById('contour').value;
+        let lang = document.getElementById('lang').value;//zh-CN
+        let types = document.getElementsByName('type');
+        let type;
+        for(let t in types) {
+            if(types[t].checked) {
+                type = types[t].value;
+                break;
+            }
+        }
+        let key = text + '_' + type + '_' + role + '_' + style + '_' + rate + '_' + pitch + '_' + volume + '_' + contour + '_' + lang;
+        return key;
+    };
+    var getURL = function(){
+        let text = document.getElementById('docTranslateDiv').value;
+        let role = document.getElementById('role').value;
+        let style = document.getElementById('style').value;
+        let rate = document.getElementById('rate').value;
+        let pitch = document.getElementById('pitch').value;
+        let volume = document.getElementById('volume').value;
+        let contour = document.getElementById('contour').value;
+        let lang = document.getElementById('lang').value;//zh-CN
+        let types = document.getElementsByName('type');
+        let type;
+        for(let t in types) {
+            if(types[t].checked) {
+                type = types[t].value;
+                break;
+            }
+        }
+        let url = 'text=' + encodeURI(text) + '&name=' + type + '&role=' + role + '&style=' + style + '&rate=' + rate + '&pitch=' + pitch + '&volume=' + volume + '&contour=' + contour + '&lang=' + lang;
+        return url;
+    };
+    var stop = function(){
+        var key = getKey();
+        if(window.audios[key] !== undefined) {
+            window.audios[key].pause();
+        }
+    };
+    var start = function() {
+        let key = getKey();
+        let url = getURL();
+        if(!window.audios) {
+            window.audios = {};
+        }
+        if(window.audios[key] === undefined) {
+            let src = 'https://docx.qhkly.com:20080/audo?' + url;
+            console.log('src', src);
+            window.audios[key] = new Audio(src);
+        }
+        window.audios[key].play();
+    };
+    var docDivOninputTimeout = undefined;
+    var docDivOninput = function(dom) {
+        if(docDivOninputTimeout) {
+            clearTimeout(docDivOninputTimeout);
+        }
+        docDivOninputTimeout = setTimeout(function() {
+            docDivOninputTimeout = undefined;
+            let content = dom.value;
+            console.log('content', content);
+            let from = 'zh-CN';
+            let to = 'en';
+            let url = '/translate?content=' + encodeURIComponent(content) + '&from=' + from + '&to=' + to;
+            $.ajax({url , success: function(result) {
+                console.log('result', result);
+                docTranslateDiv.value = result;
+            }});
+        }, 500);
+    };
+  </script>
+	<!-- </quickstartcode> -->
+</body>
+</html>
